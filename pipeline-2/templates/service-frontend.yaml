@@ -1,0 +1,17 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: kltn-frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    app: kltn-frontend
+spec:
+  type: {{ .Values.frontend.service.type }}
+  selector:
+    app: kltn-frontend
+  ports:
+    - name: http
+      port: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.containerPort | default .Values.frontend.service.port }}
+{{- end }}

@@ -1,0 +1,77 @@
+replicaCount: 1
+# =======================
+# FRONTEND CONFIGURATION
+# =======================
+frontend:
+  enabled: true
+  image:
+    repository: ghcr.io/phanminhtri667/kltn-hr-management-frontend
+    tag: "3f403072b228f733eb7eb20890278f993d83b0ff"
+    pullPolicy: IfNotPresent
+  service:
+    type: LoadBalancer
+    port: 80
+  env:
+    - name: PORT
+      value: "80"
+  resources: {}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+# =======================
+# BACKEND CONFIGURATION
+# =======================
+backend:
+  enabled: true
+  image:
+    repository: ghcr.io/phanminhtri667/kltn-hr-management-backend
+    tag: "3f403072b228f733eb7eb20890278f993d83b0ff"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  containerPort: 8080
+  env:
+    - name: PORT
+      value: "8080"
+    - name: JWT_SECRET
+      value: "token_test"
+    - name: DB_HOST
+      value: "mysql"
+    - name: DB_PORT
+      value: "3306"
+    - name: DB_NAME
+      value: "hr_management"
+    - name: DB_USER
+      value: "hr_user"
+    - name: DB_PASS
+      value: "Hr@2025_demo"
+    - name: CORS_ORIGIN
+      value: "http://35.238.114.53"
+    - name: DB_SSL
+      value: "false"
+# =======================
+# MYSQL CONFIGURATION
+# =======================
+mysql:
+  enabled: true
+  image:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+  service:
+    name: mysql
+    type: ClusterIP
+    port: 3306
+  auth:
+    rootPassword: "pmt234" #ChangeMe_Strong!
+    database: "hr_management"
+    username: "hr_user"
+    password: "Hr@2025_demo"
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClassName: local-path
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+imagePullSecrets:
+  - name: ghcr-cred

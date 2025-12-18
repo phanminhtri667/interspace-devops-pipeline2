@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+  namespace: kltn
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  # 03:00 VN = 20:00 UTC
+  schedule: "53 22 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          restartPolicy: OnFailure
+
+          containers:
+          - name: mysql-backup
+            image: mysql:8.0
+            imagePullPolicy: IfNotPresent
+
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "⏱️ Backup start at $(date -u)"
+              mkdir -p /var/lib/mysql/backups
+
+              mysqldump \
+                -h mysql \
+                -P 3306 \
+                -u root \
+                -p"$MYSQL_ROOT_PASSWORD" \
+                hr_management \
+                > /var/lib/mysql/backups/hr_management_$(date +%Y%m%d%H%M%S).sql
+
+              echo "✅ Backup completed"
+              ls -lh /var/lib/mysql/backups
+
+            env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "pmt234"
+
+            volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+
+          volumes:
+          - name: mysql-data
+            persistentVolumeClaim:
+              claimName: mysql-data-mysql-0

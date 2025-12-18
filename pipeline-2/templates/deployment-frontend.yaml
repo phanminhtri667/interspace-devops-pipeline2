@@ -1,0 +1,54 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kltn-frontend
+  labels:
+    app: kltn-frontend
+    app.kubernetes.io/name: frontend
+spec:
+  replicas: {{ .Values.frontend.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: kltn-frontend
+  template:
+    metadata:
+      labels:
+        app: kltn-frontend
+        app.kubernetes.io/name: frontend
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.frontend.containerPort | default .Values.frontend.service.port }}
+          {{- with .Values.frontend.env }}
+          env:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.frontend.liveness }}
+          livenessProbe:
+            httpGet:
+              path: {{ .path }}
+              port: {{ .port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          {{- end }}
+          {{- with .Values.frontend.readiness }}
+          readinessProbe:
+            httpGet:
+              path: {{ .path }}
+              port: {{ .port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          {{- end }}
+          {{- with .Values.frontend.resources }}
+          resources:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

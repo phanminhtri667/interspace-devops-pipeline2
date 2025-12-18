@@ -1,0 +1,17 @@
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: kltn-backend
+  labels:
+    app.kubernetes.io/name: backend
+    app: kltn-backend
+spec:
+  type: {{ .Values.backend.service.type }}
+  selector:
+    app: kltn-backend
+  ports:
+    - name: http
+      port: {{ .Values.backend.service.port }}
+      targetPort: {{ .Values.backend.containerPort | default .Values.backend.service.port }}
+{{- end }}
